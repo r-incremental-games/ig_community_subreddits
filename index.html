@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='UTF-8'>
+    <title>Incremental Games Discord Servers</title>
+    <style>
+      :root {
+        --fg: #dcddde;
+        --bg: #36393f;
+        --hilite: hsl(227, 58%, 65%);
+        --hilite-dark: hsl(227, 58%, 44%);
+        --hilite-light: hsl(227, 58%, 74%); 
+        --shadow: hsl(220, 8%, 11%);
+      }
+
+      body {
+        background: var(--bg);
+        color: var(--fg);
+        font-family: sans-serif;
+        margin: 15px;
+      }
+
+      h1 {
+        margin: 10px 0px 10px 0px;
+        font-size: 1.5em;
+      }
+
+      a {
+        background: var(--hilite);
+        color: var(--hilite-dark);
+        text-decoration: none;
+        font-weight: 600;
+      }
+
+      a:hover {
+        background: var(--hilite-light);
+      }
+
+      #listContainer {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+        grid-gap: 10px;
+        margin-top: 10px;
+      }
+
+      .subLink {
+        color: var(--fg);
+      }
+
+      .subLink:hover {
+        filter: brightness(1.07);
+      }
+
+      .subContainer {
+        display: grid;
+        grid-template-columns: 100px auto;
+        grid-template-rows: 15px auto;
+        grid-template-areas:
+          ". name"
+          "img desc";
+        align-items: center;
+        padding: 10px 10px 10px 0px;
+        background: var(--hilite);
+        border-radius: 5px;
+        box-shadow: 2px 2px 2px 0px hsl(220, 8%, 11%);
+        height: 120px;
+        overflow: hidden;
+      }
+
+      .subImg {
+        width: 64px;
+        height: 64px;
+        grid-area: img;
+        justify-self: center;
+        align-self: center;
+        border-radius: 5px;
+      }
+
+      .subName {
+        grid-area: name;
+      }
+
+      .subDesc {
+        grid-area: desc;
+        overflow: hidden;
+        max-height: 100%;
+      }
+
+    </style>
+  </head>
+  <body>
+    <h1 id='h1Title'></h1>
+    <div class='infoDiv'>To get your server on this list, visit <span id='spanParent'></span> and provide 
+    your subreddit name.</div>
+    <div class='infoDiv'>Subreddit owners, set icon_img or community_icon to enable an image and set public_description to enable text.</div>
+    <div id='listContainer'></div>
+    <script>
+
+      //To make your own server list just update pageTitle, parentLink, and subList
+
+      const pageTitle = "Incremental Game Subreddits";
+      const parentLink = "<a href='https://discord.gg/pC9RY5B'>the r/incremental_games discord server</a>";
+
+      //A list of reddit subs
+      let subList = [
+        ['dldtg'],
+        ['adventurecapitalist'],
+        ['antimatterdimensions'],
+        ['bitburner'],
+        ['civclicker'],
+        ['clickerheroes'],
+        ['lostidols'],
+        ['crushcrush'],
+        ['cryptogrounds'],
+        ['factoryidlegame'],
+        ['groundhoglife'],
+        ['idleaccelerator'],
+        ['idleraiders'],
+        ['idlesword'],
+        ['idlesword2'],
+        ['idletd'],
+        ['learntofly'],
+        ['perfecttower'],
+        ['pickcrafter'],
+        ['pokeidle'],
+        ['prosperitygame'],
+        ['reactoridle'],
+        ['reactorincremental'],
+        ['realmgrinder'],
+        ['slurpyderpy'],
+        ['spacecompany'],
+        ['spaceplan'],
+        ['swarmsim'],
+        ['taptapinfinity'],
+        ['timeclickers'],
+        ['trimps'],
+        ['warclicks'],
+        ['zombidle']
+      ];
+
+      //convert html elements into characters. i.e. "&lt;" => "<"
+      function decodeHtml(html) {
+        var txt = document.createElement("textarea");
+        txt.innerHTML = html;
+        return txt.value;
+      }
+
+      function loadSub(subName, subDiv, subURL) {
+        const url = `https://www.reddit.com/r/${subName}/about.json`;
+
+        fetch(url , {mode: 'cors'}).then(response => response.json()).then(
+          data => {
+            //this is a list of possible image properties in the order we prefer them 
+            const imgList = ['icon_img', 'community_icon']; //, 'banner_background_image', 'banner_img', 'header_img'];
+
+
+            //TODO: make entire card a link
+
+            //load best image available
+            imgList.some( prop => {
+              if (data.data[prop]) {
+                const imgLink = document.createElement('a');
+                imgLink.href = subURL;
+                const img = document.createElement('img');
+                img.src = data.data[prop].split`?`[0];
+                img.classList.add('subImg');
+                imgLink.appendChild(img);
+                imgLink.classList.add('subImg');
+                subDiv.appendChild(imgLink);
+                return true;
+              }
+              return false;
+            });
+
+            const nameDiv = document.createElement('div');
+            nameDiv.classList.add('subName');
+            const nameLink = document.createElement('a');
+            nameLink.href = subURL;
+            nameLink.innerText = `r/${data.data.display_name}`;
+            nameDiv.appendChild(nameLink);
+            subDiv.appendChild(nameDiv);
+
+            const descDiv = document.createElement('div');
+            descDiv.classList.add('subDesc');
+            descDiv.innerHTML = decodeHtml(data.data.public_description_html);
+            subDiv.appendChild(descDiv);
+
+          }
+        );
+      }
+
+      function buildPage(pageTitle, parentLink, subList) {
+        //sort the list by sub name.
+        const subSort = (a, b) => {
+          return a[0].toLowerCase() > b[0].toLowerCase() ? 1 : -1;
+        };
+
+        subList.sort( subSort );
+
+        document.title = pageTitle;
+        document.getElementById('h1Title').innerText = pageTitle;
+        document.getElementById('spanParent').innerHTML = parentLink;
+
+        const eContainer = document.getElementById('listContainer');
+
+        subList.forEach( subName => {
+          const subLink = document.createElement('a');
+          subLink.classList.add('subLink');
+
+          const subURL = `https://reddit.com/r/${subName}`;
+          subLink.href = subURL;
+
+          const subDiv = document.createElement('div');
+          subDiv.classList.add('subContainer');
+          subLink.appendChild(subDiv);
+
+          loadSub(subName, subDiv, subURL);
+
+          eContainer.appendChild(subLink);
+        });
+
+      }
+
+      buildPage(pageTitle, parentLink, subList); 
+    </script>
+  </body>
+</html>
