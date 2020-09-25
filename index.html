@@ -150,45 +150,49 @@
       function loadSub(subName, subDiv, subURL) {
         const url = `https://www.reddit.com/r/${subName}/about.json`;
 
+        //create placeholder for image
+        const img = document.createElement('img');
+        img.classList.add('subImg');
+        img.style.display = 'none';
+        subDiv.appendChild(img);
+
+        //create sub name link using placeholder text
+        const nameDiv = document.createElement('div');
+        nameDiv.classList.add('subName');
+        const nameLink = document.createElement('a');
+        nameLink.href = subURL;
+        nameLink.innerText = `r/${subName}`;
+        nameDiv.appendChild(nameLink);
+        subDiv.appendChild(nameDiv);
+
+        //create placeholder description div
+        const descDiv = document.createElement('div');
+        descDiv.classList.add('subDesc');
+        subDiv.appendChild(descDiv);
+
         fetch(url , {mode: 'cors'}).then(response => response.json()).then(
           data => {
             //this is a list of possible image properties in the order we prefer them 
             const imgList = ['icon_img', 'community_icon']; //, 'banner_background_image', 'banner_img', 'header_img'];
 
-
-            //TODO: make entire card a link
-
             //load best image available
             imgList.some( prop => {
               if (data.data[prop]) {
-                const imgLink = document.createElement('a');
-                imgLink.href = subURL;
-                const img = document.createElement('img');
                 img.src = data.data[prop].split`?`[0];
-                img.classList.add('subImg');
-                imgLink.appendChild(img);
-                imgLink.classList.add('subImg');
-                subDiv.appendChild(imgLink);
+                img.style.display = 'block';
                 return true;
               }
               return false;
             });
 
-            const nameDiv = document.createElement('div');
-            nameDiv.classList.add('subName');
-            const nameLink = document.createElement('a');
-            nameLink.href = subURL;
             nameLink.innerText = `r/${data.data.display_name}`;
-            nameDiv.appendChild(nameLink);
-            subDiv.appendChild(nameDiv);
 
-            const descDiv = document.createElement('div');
-            descDiv.classList.add('subDesc');
             descDiv.innerHTML = decodeHtml(data.data.public_description_html);
-            subDiv.appendChild(descDiv);
 
           }
-        );
+        ).catch( error => {
+          console.log(error, subName);
+        });
       }
 
       function buildPage(pageTitle, parentLink, subList) {
